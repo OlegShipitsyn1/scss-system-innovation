@@ -1,0 +1,25 @@
+@import "util/variables.scss";
+@import "util/mixin.scss";
+@import "util/reset.scss";
+@import "base.scss";
+
+.c {
+  @include parent-float-gap(2, 15px);
+  @include phone {
+    @include parent-float-gap(3, 15px);
+  }
+  @include tablet {
+    @include parent-float-gap(4, 15px);
+  }
+  @include laptop {
+    @include parent-float-gap(5, 15px);
+  }
+  @include desktop {
+    @include parent-float-gap(6, 15px);
+  }
+}
+
+.box {
+  height: 20px;
+  background-color: green;
+}

@@ -1,0 +1,597 @@
+@import "variables.scss";
+
+$breakpoints: (
+  "phone": (
+    min-width: $phone,
+  ),
+  "tablet": (
+    min-width: $tablet,
+  ),
+  "laptop": (
+    min-width: $laptop,
+  ),
+  "desktop": (
+    min-width: $desktop,
+  ),
+) !default;
+
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media #{inspect(map-get($breakpoints, $breakpoint))} {
+      @content;
+    }
+  } @else {
+    @warn "Unfortunately, no value could be retrieved from `#{$breakpoint}`. "
+        + "Available breakpoints are: #{map-keys($breakpoints)}.";
+  }
+}
+
+@mixin phone {
+  @include respond-to("phone") {
+    @content;
+  }
+}
+@mixin tablet {
+  @include respond-to("tablet") {
+    @content;
+  }
+}
+@mixin laptop {
+  @include respond-to("laptop") {
+    @content;
+  }
+}
+@mixin desktop {
+  @include respond-to("desktop") {
+    @content;
+  }
+}
+// Fluid
+@function strip-unit($value) {
+  @return $value / ($value * 0 + 1);
+}
+
+@mixin fluid(
+  $property,
+  $min-font-size,
+  $max-font-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  $u1: unit($min-vw);
+  $u2: unit($max-vw);
+  $u3: unit($min-font-size);
+  $u4: unit($max-font-size);
+
+  @if $u1 == $u2 and $u1 == $u3 and $u1 == $u4 {
+    & {
+      #{$property}: $min-font-size;
+
+      @media screen and (min-width: $min-vw) {
+        #{$property}: calc(
+          #{$min-font-size} + #{strip-unit($max-font-size - $min-font-size)} *
+            ((100vw - #{$min-vw}) / #{strip-unit($max-vw - $min-vw)})
+        );
+      }
+
+      @media screen and (min-width: $max-vw) {
+        #{$property}: $max-font-size;
+      }
+    }
+  }
+}
+
+@mixin fluid-type(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(font-size, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin fluid-square(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(width, $min-size, $max-size, $min-vw, $max-vw);
+  @include fluid(height, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin y-padding(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(padding-top, $min-size, $max-size, $min-vw, $max-vw);
+  @include fluid(padding-bottom, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin x-padding(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(padding-left, $min-size, $max-size, $min-vw, $max-vw);
+  @include fluid(padding-right, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin y-margin(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-top, $min-size, $max-size, $min-vw, $max-vw);
+  @include fluid(margin-bottom, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin x-margin(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-left, $min-size, $max-size, $min-vw, $max-vw);
+  @include fluid(margin-right, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(gap, $min-size, $max-size, $min-vw, $max-vw);
+}
+
+@mixin flex-gap($size) {
+  & > .flex-gapped {
+    margin-left: -$size;
+    margin-top: -$size;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: inherit;
+    align-items: inherit;
+  }
+
+  & > .flex-gapped > * {
+    margin-left: $size;
+    margin-top: $size;
+  }
+}
+
+@mixin float-gap($quantity, $gap) {
+  width: calc((100% - (#{$gap} * (#{$quantity} - 1))) / #{$quantity});
+  margin-right: $gap;
+  margin-top: $gap;
+  float: left;
+  &:nth-child(n) {
+    margin-right: $gap;
+  }
+  &:nth-child(#{$quantity}n) {
+    margin-right: 0;
+  }
+}
+
+@mixin parent-float-gap($quantity, $gap) {
+  margin-top: -$gap;
+  &::after {
+    content: "";
+    display: block;
+    clear: both;
+  }
+  & > * {
+    @include float-gap($quantity, $gap);
+  }
+}
+
+// Animations
+@mixin hardware($backface: true, $perspective: 1000) {
+  @if $backface {
+    backface-visibility: hidden;
+    perspective: $perspective;
+  }
+}
+
+// Helpers
+@mixin pseudo($display: block, $pos: absolute, $content: "") {
+  content: $content;
+  display: $display;
+  position: $pos;
+}
+
+@mixin responsive-ratio($x, $y, $pseudo: false) {
+  $padding: unquote($y / $x * 100 + "%");
+
+  @if $pseudo {
+    &:before {
+      @include pseudo($pos: relative);
+
+      width: 100%;
+      padding-top: $padding;
+    }
+  } @else {
+    padding-top: $padding;
+  }
+}
+
+@mixin triangle(
+  $color,
+  $direction,
+  $size: 6px,
+  $position: absolute,
+  $round: false
+) {
+  @include pseudo($pos: $position);
+
+  width: 0;
+  height: 0;
+
+  @if $round {
+    border-radius: 3px;
+  }
+
+  @if $direction == down {
+    border-left: $size solid transparent;
+    border-right: $size solid transparent;
+    border-top: $size solid $color;
+    margin-top: 0 - round($size / 2.5);
+  } @else if $direction == up {
+    border-left: $size solid transparent;
+    border-right: $size solid transparent;
+    border-bottom: $size solid $color;
+    margin-bottom: 0 - round($size / 2.5);
+  } @else if $direction == right {
+    border-top: $size solid transparent;
+    border-bottom: $size solid transparent;
+    border-left: $size solid $color;
+    margin-right: -$size;
+  } @else if $direction == left {
+    border-top: $size solid transparent;
+    border-bottom: $size solid transparent;
+    border-right: $size solid $color;
+    margin-left: -$size;
+  }
+}
+
+@mixin truncate($truncation-boundary) {
+  max-width: $truncation-boundary;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Paddings
+@mixin push-auto {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+// Shortcuts
+@mixin square($side) {
+  width: $side;
+  height: $side;
+}
+
+@mixin hide($val, $display) {
+  display: $display;
+
+  @media (min-width: $val) {
+    display: none;
+  }
+}
+
+@mixin show($val, $display) {
+  display: none;
+
+  @media (min-width: $val) {
+    display: $display;
+  }
+}
+
+@mixin row-on($val) {
+  display: flex;
+  flex-direction: column;
+
+  @media (min-width: $val) {
+    flex-direction: row;
+  }
+}
+
+@mixin column-on($val) {
+  display: flex;
+
+  @media (min-width: $val) {
+    flex-direction: column;
+  }
+}
+
+// Sizing
+@mixin max-size($val) {
+  width: $val;
+  max-width: 100%;
+}
+
+@mixin min-size($val) {
+  width: 100%;
+  min-width: $val;
+}
+
+@mixin x-gap($val) {
+  padding-right: $val;
+
+  &:last-child {
+    padding-right: 0;
+  }
+}
+
+@mixin y-gap($val) {
+  padding-bottom: $val;
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+@mixin x-margin-gap($val) {
+  margin-right: $val;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+@mixin y-margin-gap($val) {
+  margin-bottom: $val;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin fluid-x-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(padding-right, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    padding-right: 0;
+  }
+}
+
+@mixin fluid-y-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(padding-bottom, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    padding-bottom: 0;
+  }
+}
+
+@mixin fluid-x-margin-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-right, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+@mixin fluid-y-margin-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-bottom, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin x-margin-gap($val) {
+  margin-right: $val;
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+@mixin y-margin-gap($val) {
+  margin-bottom: $val;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin fluid-x-margin-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-right, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    margin-right: 0;
+  }
+}
+
+@mixin fluid-y-margin-gap(
+  $min-size,
+  $max-size,
+  $min-vw: $desktop-min-width,
+  $max-vw: $desktop-max-width
+) {
+  @include fluid(margin-bottom, $min-size, $max-size, $min-vw, $max-vw);
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+@mixin bg-image($overlay: transparent, $z-index: 3, $object-position: center) {
+  position: relative;
+  z-index: $z-index;
+  background-color: transparent;
+
+  & > * {
+    position: relative;
+    z-index: $z-index;
+  }
+
+  & > img {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: $z-index - 2;
+    max-width: 100%;
+    object-fit: cover;
+    object-position: $object-position;
+  }
+
+  &::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: $z-index - 1;
+    background-color: $overlay;
+  }
+}
+
+@mixin flex-centering {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+@mixin text-gap($val) {
+  p {
+    margin: $val 0;
+
+    &:first-child {
+      margin-top: 0;
+    }
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+}
+
+@mixin scrollbars(
+  $size,
+  $foreground-color,
+  $background-color: mix($foreground-color, white, 10%)
+) {
+  // For Google Chrome
+  &::-webkit-scrollbar {
+    width: $size;
+    height: $size;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: $foreground-color;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: $background-color;
+  }
+
+  // For Internet Explorer
+  & {
+    scrollbar-face-color: $foreground-color;
+    scrollbar-track-color: $background-color;
+  }
+}
+
+@mixin center($position) {
+  position: absolute;
+
+  @if $position == "vertical" {
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    transform: translateY(-50%);
+  } @else if $position == "horizontal" {
+    left: 50%;
+    -webkit-transform: translateX(-50%);
+    -ms-transform: translateX(-50%);
+    transform: translate(-50%);
+  } @else if $position == "both" {
+    top: 50%;
+    left: 50%;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+  }
+}
+
+@mixin fade($type) {
+  @if $type == "hide" {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 1s, opacity 1s;
+  } @else if $type == "show" {
+    visibility: visible;
+    opacity: 1;
+    transition: visibility 1s, opacity 1s;
+  }
+}
+
+@mixin skew-background-transition($initial, $hover, $inverted: false) {
+  background: linear-gradient(
+    90deg,
+    $hover 0%,
+    $hover 50%,
+    $initial 50%,
+    $initial 100%
+  );
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  background-position: right bottom;
+
+  @if $inverted {
+    background-position: left bottom;
+    transition: background-position 0.25s ease-out;
+  }
+
+  &:hover {
+    background-position: left bottom;
+
+    @if $inverted {
+      background-position: right bottom;
+    }
+  }
+}
+
+@mixin preventTextOverflow {
+  // word-wrap: break-word;
+  overflow-wrap: break-word;
+}
